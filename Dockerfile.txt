@@ -1,0 +1,27 @@
+# Use an official Python runtime as a parent image
+FROM python:3.11-slim
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY requirements.txt .
+
+# Install system dependencies required by WeasyPrint
+RUN apt-get update && apt-get install -y \
+    libpango-1.0-0 \
+    libharfbuzz0 \
+    libfontconfig1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python packages
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of your app's source code
+COPY . .
+
+# Expose the port the app runs on
+EXPOSE 5000
+
+# Run api.py when the container launches
+CMD ["python", "api.py"]
