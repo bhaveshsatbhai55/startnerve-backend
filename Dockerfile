@@ -28,4 +28,4 @@ COPY . .
 EXPOSE $PORT
 
 # Run the app using gunicorn (Shell form to allow variable substitution)
-CMD gunicorn --bind 0.0.0.0:$PORT app:app
+CMD gunicorn --bind 0.0.0.0:$PORT --log-level debug --access-logfile - --error-logfile - app:app
