@@ -7,6 +7,7 @@ import os
 import uuid
 import time
 from werkzeug.utils import secure_filename
+import traceback
 
 # --- AI Agent Import ---
 import course_agent
@@ -16,7 +17,7 @@ from weasyprint import HTML, CSS
 
 # --- Application Setup ---
 app = Flask(__name__)
-# --- MODIFIED --- Allow requests specifically from your Netlify domain
+# Allow requests specifically from your Netlify domain
 CORS(app, resources={r"/api/*": {"origins": "https://startnerve-mvp.netlify.app"}})
 
 EBOOK_DIR = 'generated_ebooks'
@@ -93,7 +94,6 @@ def allowed_file(filename):
 
 @app.route('/api/upload-cover', methods=['POST'])
 def upload_cover_image():
-    # ... (This endpoint is unchanged)
     print("--- Received request at /api/upload-cover ---")
     if 'coverImage' not in request.files: return jsonify({'error': 'No file part in the request'}), 400
     file = request.files['coverImage']
@@ -117,7 +117,6 @@ def uploaded_cover(filename):
 
 @app.route('/api/generate-outline', methods=['POST'])
 def generate_outline_endpoint():
-    # ... (This endpoint is unchanged)
     print("Received request at /api/generate-outline")
     data = request.get_json()
     topic = data.get('topic')
@@ -136,7 +135,6 @@ def generate_outline_endpoint():
 
 @app.route('/api/generate-text-content', methods=['POST'])
 def generate_text_content_route():
-    # ... (This endpoint is unchanged)
     print("--- Received request at /api/generate-text-content ---")
     data = request.get_json()
     outline = data.get('outline')
@@ -157,7 +155,7 @@ def generate_text_content_route():
                     learning_objective=lesson['learning_objective']
                 )
                 print(f"  - Finding image for: {lesson_title}")
-                image_url = course_agent.find_relevant_image(f"{lesson_title}, {module['module_title']}, {course_title}")
+                image_url = course_agent.find_relevant_image(f"{lesson_title} {course_title}")
                 image_html = f'<p class="ai-image"><img src="{image_url}" alt="{secure_filename(lesson_title)}"></p>' if image_url else ""
                 content_html = image_html + ''.join([f'<p>{p}</p>' for p in lesson_content_text.split('\n') if p.strip()])
                 full_content_data.append({
@@ -173,7 +171,6 @@ def generate_text_content_route():
 
 @app.route('/api/generate-full-ebook', methods=['POST'])
 def generate_full_ebook_route():
-    # ... (This endpoint is unchanged)
     print("--- Received request at /api/generate-full-ebook ---")
     data = request.get_json()
     outline = data.get('outline')
@@ -198,8 +195,10 @@ def generate_full_ebook_route():
         download_url = f"/api/download/{pdf_filename}"
         return jsonify({'download_url': download_url})
     except Exception as e:
-        print(f"An error occurred during full e-book generation: {e}")
-        return jsonify({"error": "A critical error occurred while building the e-book."}), 500
+        print("--- FULL TRACEBACK ---")
+        traceback.print_exc()
+        print("--- END TRACEBACK ---")
+        return jsonify({"error": f"An error occurred during full e-book generation: {e}"}), 500
 
 @app.route('/api/download/<path:filename>')
 def download_ebook(filename):
@@ -208,7 +207,6 @@ def download_ebook(filename):
 
 # --- HELPER FUNCTIONS ---
 def get_css_for_style(font_name='roboto', color_hex='#FFFFFF'):
-    # ... (This function is unchanged)
     font = FONT_STYLES.get(font_name, FONT_STYLES['roboto'])
     if is_color_dark(color_hex):
         main_text_color, heading_color, toc_link_color, toc_border_color = '#EAEAEA', '#FFFFFF', '#90cdf4', '#4A5567'
@@ -234,12 +232,11 @@ def get_css_for_style(font_name='roboto', color_hex='#FFFFFF'):
         .lesson-content {{ margin-top: 10px; text-align: justify; }}
         .lesson-content p {{ margin-bottom: 1em; }}
         .ai-image {{ text-align: center; margin: 2em 0; clear: both; page-break-inside: avoid; }}
-        .ai-image img { max-width: 100%; height: auto; border-radius: 8px; page-break-inside: avoid; }
+        .ai-image img {{ max-width: 100%; height: auto; border-radius: 8px; }}
     """
     return f"<style>{font['import']}{base_css}</style>"
 
 def build_ebook_html(title, outline, content_data, font_name, color_hex, cover_image_path):
-    # ... (This function is unchanged)
     html_style = get_css_for_style(font_name, color_hex)
     if cover_image_path:
         html_body = f'<div class="title-page"><img src="{cover_image_path}"></div>'
@@ -272,7 +269,6 @@ def build_ebook_html(title, outline, content_data, font_name, color_hex, cover_i
 # --- VIRAL CONTENT ENGINE ENDPOINT (Unchanged) ---
 @app.route('/api/generate-viral-content', methods=['POST'])
 def generate_viral_content_endpoint():
-    # ... (This endpoint is unchanged)
     print("Received request at /api/generate-viral-content")
     data = request.get_json()
     topic = data.get('topic')
