@@ -234,7 +234,7 @@ def get_css_for_style(font_name='roboto', color_hex='#FFFFFF'):
         .lesson-content {{ margin-top: 10px; text-align: justify; }}
         .lesson-content p {{ margin-bottom: 1em; }}
         .ai-image {{ text-align: center; margin: 2em 0; clear: both; page-break-inside: avoid; }}
-        .ai-image img {{ max-width: 100%; height: auto; border-radius: 8px; }}
+        .ai-image img { max-width: 100%; height: auto; border-radius: 8px; page-break-inside: avoid; }
     """
     return f"<style>{font['import']}{base_css}</style>"
 
