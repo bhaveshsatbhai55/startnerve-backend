@@ -157,7 +157,7 @@ def generate_text_content_route():
                     learning_objective=lesson['learning_objective']
                 )
                 print(f"  - Finding image for: {lesson_title}")
-                image_url = course_agent.find_relevant_image(f"{lesson_title} {course_title}")
+                image_url = course_agent.find_relevant_image(f"{lesson_title}, {module['module_title']}, {course_title}")
                 image_html = f'<p class="ai-image"><img src="{image_url}" alt="{secure_filename(lesson_title)}"></p>' if image_url else ""
                 content_html = image_html + ''.join([f'<p>{p}</p>' for p in lesson_content_text.split('\n') if p.strip()])
                 full_content_data.append({
