@@ -1,0 +1,9 @@
+# Python cache
+__pycache__/
+
+# Environment variables
+.env
+
+# Generated and uploaded files
+generated_ebooks/
+uploaded_covers/
