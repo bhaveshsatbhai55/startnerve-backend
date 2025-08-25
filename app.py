@@ -422,8 +422,8 @@ def get_css_for_style(font_name='roboto', color_hex='#FFFFFF'):
             border-radius: 8px;
         }}
     """
-    return f"<style>{font['import']}{base_css}</style>"
-
+    return f"<style>{font['import']}{base_css}</style>" 
+    
 def build_ebook_html(title, outline, content_data, font_name, color_hex, cover_image_path):
     html_style = get_css_for_style(font_name, color_hex)
 
