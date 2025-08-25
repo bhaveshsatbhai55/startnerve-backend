@@ -10,6 +10,7 @@ colorama==0.4.6
 cssselect2==0.8.0
 Flask==3.1.1
 flask-cors==6.0.1
+firebase-admin
 fonttools==4.59.0
 fpdf==1.7.2
 google-ai-generativelanguage==0.6.15
@@ -31,6 +32,7 @@ markdown_pdf==1.7
 MarkupSafe==3.0.2
 mdurl==0.1.2
 packaging==25.0
+pexels-api
 pillow==11.3.0
 proto-plus==1.26.1
 protobuf==5.29.5

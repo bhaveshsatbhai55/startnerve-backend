@@ -7,3 +7,6 @@ __pycache__/
 # Generated and uploaded files
 generated_ebooks/
 uploaded_covers/
+
+# Firebase Admin SDK secret key
+serviceAccountKey.json
