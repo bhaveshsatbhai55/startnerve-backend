@@ -12,6 +12,7 @@ import concurrent.futures
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from multiprocessing import Manager
 
 # --- AI Agent Import ---
 import course_agent
@@ -174,6 +175,7 @@ def create_user_endpoint():
     try:
         data = request.get_json()
         uid = data.get('uid')
+        print(f"--- ATTEMPTING TO CREATE USER WITH UID: {uid} ---") # ADDED FOR DEBUGGING
         if not uid:
             return jsonify({"error": "Missing user ID"}), 400
         if not db:
@@ -221,6 +223,7 @@ def generate_outline_endpoint():
     try:
         data = request.get_json()
         uid = data.get('uid') 
+        print(f"--- EBOOK OUTLINE RECEIVED UID: {uid} ---") # ADDED FOR DEBUGGING
         if not uid: return jsonify({"error": "User not authenticated"}), 401
         if not has_credits(uid, "ebook"):
             return jsonify({"error": "You're out of ebook credits!"}), 403
@@ -242,13 +245,18 @@ def generate_outline_endpoint():
         return jsonify({"error": "An internal server error occurred"}), 500
 
 
-# --- Lesson Processor ---
+# --- Content Processor for Parallel Generation (CORRECTED & MATCHED) ---
 def process_lesson(lesson_args):
-    """Helper: generate content + image for one lesson."""
-    course_title, module, lesson, mod_idx, les_idx = lesson_args
+    """
+    Helper function to generate content + image for a single lesson.
+    The function signature is now different to accept a shared list for image IDs.
+    """
+    # Unpack all the arguments, including the shared list for unique image IDs
+    course_title, module, lesson, mod_idx, les_idx, used_ids = lesson_args
     lesson_title = lesson['lesson_title']
     print(f"  - Generating: {lesson_title}")
 
+    # Generate the lesson's text content
     lesson_content_text = course_agent.generate_lesson_content(
         course_title=course_title,
         module_title=module['module_title'],
@@ -259,14 +267,16 @@ def process_lesson(lesson_args):
     # YOUR NEW FEATURE: Clean duplicate paragraphs
     paragraphs = [p.strip() for p in lesson_content_text.split('\n') if p.strip()]
     seen = set()
-    cleaned_paragraphs = []
-    for p in paragraphs:
-        if p not in seen:
-            cleaned_paragraphs.append(p)
-            seen.add(p)
+    cleaned_paragraphs = [p for p in paragraphs if not (p in seen or seen.add(p))]
 
-    image_query = f"{lesson_title}, {module['module_title']}"
-    image_url = course_agent.find_relevant_image(image_query) # This uses the smart function from your course_agent.py
+    # Get a unique image for this lesson
+    image_info = course_agent.find_unique_image(
+        title=lesson_title, 
+        content=lesson_content_text, # Use the full text for a better query
+        used_ids=used_ids
+    )
+    
+    image_url = image_info["url"] if image_info else ""
     image_html = f'<div class="ai-image"><img src="{image_url}" alt="{secure_filename(lesson_title)}"></div>' if image_url else ""
     
     content_html = image_html + ''.join([f'<p>{p}</p>' for p in cleaned_paragraphs])
@@ -276,35 +286,38 @@ def process_lesson(lesson_args):
         'module_title': f"Module {mod_idx}: {module['module_title']}",
         'lesson_title': f"Lesson {mod_idx}.{les_idx}: {lesson_title}",
         'content': content_html,
-        'original_order': (mod_idx, les_idx)
+        'original_order': (mod_idx, les_idx),
+        'image_id': image_info.get('id')
     }
 
 
-# --- Generate Text Content ---
+# --- Generate Text Content (with parallel processing) ---
 @app.route('/api/generate-text-content', methods=['POST'])
 def generate_text_content_route():
     try:
         data = request.get_json()
         uid = data.get('uid')
+        print(f"--- EBOOK CONTENT RECEIVED UID: {uid} ---") # ADDED FOR DEBUGGING
         if not uid: return jsonify({"error": "User not authenticated"}), 401
         if not has_credits(uid, "ebook"):
             return jsonify({"error": "You're out of ebook credits!"}), 403
 
         outline = data.get('outline')
-        if not outline:
-            return jsonify({'error': 'No outline data provided.'}), 400
+        if not outline: return jsonify({'error': 'No outline data provided.'}), 400
 
-        print("PHASE 1: Generating all lesson content in parallel...")
+        print("Generating all lesson content in parallel...")
         course_title = outline.get('course_title', 'My E-book')
         
         tasks = []
-        for mod_idx, module in enumerate(outline.get('modules', []), 1):
-            for les_idx, lesson in enumerate(module.get('lessons', []), 1):
-                tasks.append((course_title, module, lesson, mod_idx, les_idx))
+        with Manager() as manager:
+            used_ids = manager.list()
+            for mod_idx, module in enumerate(outline.get('modules', []), 1):
+                for les_idx, lesson in enumerate(module.get('lessons', []), 1):
+                    tasks.append((course_title, module, lesson, mod_idx, les_idx, used_ids))
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            full_content_data = list(executor.map(process_lesson, tasks))
-
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                full_content_data = list(executor.map(process_lesson, tasks))
+        
         # sort back into order
         full_content_data.sort(key=lambda x: x['original_order'])
 
@@ -321,6 +334,7 @@ def generate_full_ebook_route():
     try:
         data = request.get_json()
         uid = data.get('uid')
+        print(f"--- EBOOK EXPORT RECEIVED UID: {uid} ---") # ADDED FOR DEBUGGING
         if not uid: return jsonify({"error": "User not authenticated"}), 401
         if not has_credits(uid, "ebook"):
             return jsonify({"error": "You're out of ebook credits!"}), 403
@@ -356,6 +370,7 @@ def generate_viral_content_endpoint():
     try:
         data = request.get_json()
         uid = data.get('uid')
+        print(f"--- VIRAL ENGINE RECEIVED UID: {uid} ---") # ADDED FOR DEBUGGING
         if not uid: return jsonify({"error": "User not authenticated"}), 401
         if not has_credits(uid, "script"):
             return jsonify({"error": "You're out of script credits!"}), 403
@@ -412,15 +427,7 @@ def get_css_for_style(font_name='roboto', color_hex='#FFFFFF'):
         .lesson-content {{ margin-top: 10px; text-align: justify; }}
         .lesson-content p {{ margin-bottom: 1em; }}
         .ai-image {{ text-align: center; margin: 2em 0; clear: both; page-break-inside: avoid; overflow: hidden; }}
-        
-        /* --- THIS IS THE FINAL FIX FOR IMAGE SIZING --- */
-        .ai-image img {{
-            max-width: 100% !important; /* This forces the image to never be wider than the page */
-            height: auto;               /* This maintains the aspect ratio */
-            display: block;
-            margin: 0 auto;
-            border-radius: 8px;
-        }}
+        .ai-image img {{ max-width: 100%; height: auto; border-radius: 8px; display: block; margin: 0 auto; }}
     """
     return f"<style>{font['import']}{base_css}</style>"
 
@@ -447,24 +454,21 @@ def build_ebook_html(title, outline, content_data, font_name, color_hex, cover_i
         html_body += '</ul></li>'
     html_body += '</ul></div>'
     
-    # --- THIS IS THE CORRECTED LOGIC FOR BUILDING THE CONTENT ---
-    # It uses the outline for structure and a map for content to prevent errors.
+    # This is the corrected logic for building the content
     content_map = {item['lesson_title']: item['content'] for item in content_data}
 
-    current_module_title = ""
     for mod_idx, module in enumerate(outline.get('modules', []), 1):
         module_title_full = f"Module {mod_idx}: {module['module_title']}"
         module_id = secure_filename(module_title_full)
-        # Add the 'module-title' class to the h2 tag for proper page breaks
-        html_body += f'<div class="chapter"><h2 class="module-title" id="{module_id}">{module_title_full}</h2></div>'
+        html_body += f'<h2 class="module-title" id="{module_id}">{module_title_full}</h2>'
 
         for les_idx, lesson in enumerate(module.get('lessons', []), 1):
             lesson_title_full = f"Lesson {mod_idx}.{les_idx}: {lesson['lesson_title']}"
             lesson_id = secure_filename(lesson_title_full)
             
-            content_html = content_map.get(lesson_title_full, "<p>Error: Content for this lesson was not found.</p>")
+            content_html = content_map.get(lesson_title_full, "<p>Error: Content not found.</p>")
             
-            html_body += f"<div class='lesson'><h4 id='{lesson_id}'>{lesson_title_full}</h4><div class='lesson-content'>{content_html}</div></div>"
+            html_body += f"<div class='lesson'><h4 id='{lesson_id}'>{lesson_title_full}</h4><div class=\"lesson-content\">{content_html}</div></div>"
 
     return f"<html><head><meta charset='UTF-8'>{html_style}</head><body>{html_body}</body></html>"
 
