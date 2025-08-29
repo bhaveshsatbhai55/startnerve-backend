@@ -157,45 +157,66 @@ def find_unique_image(title, content, used_ids):
 
 
 # In course_agent.py, replace the generate_viral_campaign function
-
 def generate_viral_campaign(topic, brand_dna):
     """
-    Generates 3 distinct viral video scripts, one caption, and one hashtag block.
+    Generates 3 premium, distinct, 50-60 second viral video scripts.
     """
     prompt = f"""
-    You are "Synapse," a world-class viral video scriptwriter. Your job is to create scripts that are emotionally engaging and optimized for short-form video platforms. A client's brand DNA is as follows:
+    You are "Synapse," a world-class viral video strategist. Your job is to create emotionally engaging, 50-60 second video scripts optimized for platforms like TikTok, Reels, and YouTube Shorts. A client's brand DNA is as follows:
     - Tone: {brand_dna.get('tone', 'Educational & Authoritative')}
     - Target Audience: {brand_dna.get('audience', 'General Audience')}
     - Call to Action: {brand_dna.get('cta', 'Follow for more')}
 
     The client wants three distinct viral video scripts on the topic: "{topic}".
 
-    Your task is to generate:
-    1.  Three complete, distinct, and high-quality video scripts. Each script should be based on a different proven viral framework (e.g., "Us vs. Them", "Open Loop", "Value List").
-    2.  One all-purpose, engaging Instagram caption that can be used with any of the videos.
-    3.  One block of 15-20 strategic hashtags.
+    Your task is to generate THREE complete, distinct, and premium video scripts. Each script must be detailed enough to fill 50-60 seconds and use a different proven viral framework.
 
     Structure the output EXACTLY as follows, using the specified delimiters.
 
     ---SCRIPT_1---
-    [Write the complete first video script here. Include visual cues.]
+    **Framework:** The Contrarian Truth
+
+    **(0-5s) The Hook:**
+    [Write a strong, contrarian opening statement that challenges a common belief about the topic. Make it bold and slightly shocking.]
+
+    **(5-25s) Agitate the Problem:**
+    [Describe the pain points and frustrations the audience experiences by following the common (wrong) advice. Use relatable examples and fast-paced visual cues.]
+
+    **(25-50s) Reveal the "Real" Solution:**
+    [Introduce the new, correct way of thinking. Present your core value and evidence here. Explain why this approach is better and show the positive results.]
+
+    **(50-60s) The Call to Action:**
+    [Give a clear, strong call to action that encourages the viewer to learn more, follow, or try the solution themselves.]
     ---SCRIPT_1_END---
 
     ---SCRIPT_2---
-    [Write the complete second video script here. Include visual cues.]
+    **Framework:** The Storytelling Arc
+
+    **(0-7s) The Relatable Beginning:**
+    [Start with a personal and relatable story about a struggle related to the topic. "I used to be like you..."]
+
+    **(7-30s) The Turning Point:**
+    [Describe the moment of discovery or the "aha!" moment when you found a better way. Build suspense and keep the viewer engaged.]
+
+    **(30-55s) The Transformation & Value:**
+    [Show the positive outcome of the new approach. Explain the key lesson learned and give the audience the actionable advice they can use.]
+
+    **(55-60s) The Call to Action:**
+    [End with a call to action that ties back to the story.]
     ---SCRIPT_2_END---
 
     ---SCRIPT_3---
-    [Write the complete third video script here. Include visual cues.]
+    **Framework:** The Value-Packed List (Expanded)
+
+    **(0-5s) The Hook:**
+    [State the number and type of value being offered (e.g., "3 secrets," "5 myths"). Make it sound exclusive and valuable.]
+
+    **(5-55s) The Detailed Breakdown:**
+    [Dedicate about 15-20 seconds to each point on the list. For each point, provide a clear explanation, a practical example, and a strong visual cue.]
+
+    **(55-60s) The Summary & Call to Action:**
+    [Quickly summarize the key takeaways and give a strong call to action.]
     ---SCRIPT_3_END---
-
-    ---INSTAGRAM_CAPTION---
-    [Write a single, beautifully formatted Instagram caption with emojis and a strong call to action here.]
-    ---INSTAGRAM_CAPTION_END---
-
-    ---HASHTAGS---
-    [Provide a single block of 15-20 strategic hashtags here.]
-    ---HASHTAGS_END---
     """
     try:
         response = model.generate_content(prompt)
