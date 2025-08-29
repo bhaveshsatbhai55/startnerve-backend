@@ -158,58 +158,40 @@ def find_unique_image(title, content, used_ids):
 
 def generate_viral_campaign(topic, brand_dna):
     """
-    Generates 3 premium, strategy-driven viral campaign packages.
+    Generates 3 premium, distinct viral video scripts.
     """
     prompt = f"""
-    You are "Synapse," a world-class viral launch strategist. Your analysis is sharp, strategic, and based on proven marketing psychology. A client's brand DNA is as follows:
+    You are "Synapse," a world-class viral video scriptwriter. Your job is to create scripts that are emotionally engaging and optimized for short-form video platforms. A client's brand DNA is as follows:
     - Tone: {brand_dna.get('tone', 'Educational & Authoritative')}
     - Target Audience: {brand_dna.get('audience', 'General Audience')}
     - Unique Angle: {brand_dna.get('angle', 'Expert advice')}
     - Call to Action: {brand_dna.get('cta', 'Follow for more')}
 
-    The client wants to create viral content on the topic: "{topic}".
+    The client wants to create viral videos on the topic: "{topic}".
 
-    Your task is to generate THREE complete, distinct, and premium campaign packages. Each package must be based on a proven psychological framework. For each package, you must provide a "Strategic Rationale" explaining WHY the strategy works before giving the content assets.
+    Your task is to generate THREE complete, distinct, and premium video scripts. Each script must use a different proven viral framework. For each script, you must provide a "Strategic Rationale" explaining WHY the script works.
 
     Structure the output EXACTLY as follows, using the specified delimiters.
 
     ---CAMPAIGN_1_START---
     CAMPAIGN_TITLE: The "Us vs. Them" Framework
     STRATEGIC_RATIONALE: [Provide a 2-3 sentence explanation of the "Us vs. Them" psychological trigger, focusing on creating a common enemy (e.g., outdated advice, gatekeepers) and positioning the creator as the insider with the secret.]
-    ---HOOKS---
-    [Provide 5 short, punchy video hooks (under 7 words) designed to create a pattern interrupt and call out the common enemy.]
-    ---SCRIPT_BREAKDOWN---
-    [Provide a full video script broken down into three parts: 1. The Hook (chosen from above), 2. The Core Value (the myth-busting content), 3. The Call to Action (driving engagement).]
-    ---VISUAL_IDEAS---
-    [Suggest 3-4 simple but effective B-roll or visual ideas that enhance the script's message.]
-    ---HASHTAGS---
-    [Provide a strategic mix of 10-15 hashtags, including broad, niche, and community-specific tags.]
+    ---YOUTUBE_SCRIPT---
+    [Provide a full, engaging video script broken down into three parts: 1. The Hook (designed to create a pattern interrupt), 2. The Core Value (the myth-busting content), 3. The Call to Action (driving engagement).]
     ---CAMPAIGN_1_END---
 
     ---CAMPAIGN_2_START---
     CAMPAIGN_TITLE: The "Open Loop" Framework
     STRATEGIC_RATIONALE: [Provide a 2-3 sentence explanation of the "Open Loop" or "Curiosity Gap" framework, explaining how creating a question or mystery in the hook forces viewers to watch until the end to get the answer.]
-    ---HOOKS---
-    [Provide 5 hooks that create a strong curiosity gap.]
-    ---SCRIPT_BREAKDOWN---
-    [Provide a full video script broken down into three parts: 1. The Hook (creating the mystery), 2. The Climax (revealing the secret/answer), 3. The Call to Action.]
-    ---VISUAL_IDEAS---
-    [Suggest 3-4 visual ideas that build suspense and lead to the reveal.]
-    ---HASHTAGS---
-    [Provide a strategic mix of 10-15 hashtags.]
+    ---YOUTUBE_SCRIPT---
+    [Provide a full, engaging video script broken down into three parts: 1. The Hook (creating the mystery), 2. The Climax (revealing the secret/answer), 3. The Call to Action.]
     ---CAMPAIGN_2_END---
 
     ---CAMPAIGN_3_START---
     CAMPAIGN_TITLE: The "Value-Packed List" Framework
     STRATEGIC_RATIONALE: [Provide a 2-3 sentence explanation of why list-based content ("3 Tools," "5 Mistakes") is highly effective. Focus on its clarity, perceived value, and high save/share rate.]
-    ---HOOKS---
-    [Provide 5 hooks that clearly state the number and type of value being offered (e.g., "3 AI tools you're not using").]
-    ---SCRIPT_BREAKDOWN---
-    [Provide a full video script broken down into parts for each item on the list, plus a compelling intro and outro/CTA.]
-    ---VISUAL_IDEAS---
-    [Suggest visual ideas that clearly showcase each item on the list.]
-    ---HASHTAGS---
-    [Provide a strategic mix of 10-15 hashtags.]
+    ---YOUTUBE_SCRIPT---
+    [Provide a full, engaging video script broken down into parts for each item on the list, plus a compelling intro and outro/CTA.]
     ---CAMPAIGN_3_END---
     """
     try:
