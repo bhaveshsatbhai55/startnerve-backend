@@ -156,43 +156,46 @@ def find_unique_image(title, content, used_ids):
     return {"url": f"https://placehold.co/800x450/1a202c/e2e8f0?text=No+Unique+Image+Found", "id": None}
 
 
+# In course_agent.py, replace the generate_viral_campaign function
+
 def generate_viral_campaign(topic, brand_dna):
     """
-    Generates 3 premium, distinct viral video scripts.
+    Generates 3 distinct viral video scripts, one caption, and one hashtag block.
     """
     prompt = f"""
     You are "Synapse," a world-class viral video scriptwriter. Your job is to create scripts that are emotionally engaging and optimized for short-form video platforms. A client's brand DNA is as follows:
     - Tone: {brand_dna.get('tone', 'Educational & Authoritative')}
     - Target Audience: {brand_dna.get('audience', 'General Audience')}
-    - Unique Angle: {brand_dna.get('angle', 'Expert advice')}
     - Call to Action: {brand_dna.get('cta', 'Follow for more')}
 
-    The client wants to create viral videos on the topic: "{topic}".
+    The client wants three distinct viral video scripts on the topic: "{topic}".
 
-    Your task is to generate THREE complete, distinct, and premium video scripts. Each script must use a different proven viral framework. For each script, you must provide a "Strategic Rationale" explaining WHY the script works.
+    Your task is to generate:
+    1.  Three complete, distinct, and high-quality video scripts. Each script should be based on a different proven viral framework (e.g., "Us vs. Them", "Open Loop", "Value List").
+    2.  One all-purpose, engaging Instagram caption that can be used with any of the videos.
+    3.  One block of 15-20 strategic hashtags.
 
     Structure the output EXACTLY as follows, using the specified delimiters.
 
-    ---CAMPAIGN_1_START---
-    CAMPAIGN_TITLE: The "Us vs. Them" Framework
-    STRATEGIC_RATIONALE: [Provide a 2-3 sentence explanation of the "Us vs. Them" psychological trigger, focusing on creating a common enemy (e.g., outdated advice, gatekeepers) and positioning the creator as the insider with the secret.]
-    ---YOUTUBE_SCRIPT---
-    [Provide a full, engaging video script broken down into three parts: 1. The Hook (designed to create a pattern interrupt), 2. The Core Value (the myth-busting content), 3. The Call to Action (driving engagement).]
-    ---CAMPAIGN_1_END---
+    ---SCRIPT_1---
+    [Write the complete first video script here. Include visual cues.]
+    ---SCRIPT_1_END---
 
-    ---CAMPAIGN_2_START---
-    CAMPAIGN_TITLE: The "Open Loop" Framework
-    STRATEGIC_RATIONALE: [Provide a 2-3 sentence explanation of the "Open Loop" or "Curiosity Gap" framework, explaining how creating a question or mystery in the hook forces viewers to watch until the end to get the answer.]
-    ---YOUTUBE_SCRIPT---
-    [Provide a full, engaging video script broken down into three parts: 1. The Hook (creating the mystery), 2. The Climax (revealing the secret/answer), 3. The Call to Action.]
-    ---CAMPAIGN_2_END---
+    ---SCRIPT_2---
+    [Write the complete second video script here. Include visual cues.]
+    ---SCRIPT_2_END---
 
-    ---CAMPAIGN_3_START---
-    CAMPAIGN_TITLE: The "Value-Packed List" Framework
-    STRATEGIC_RATIONALE: [Provide a 2-3 sentence explanation of why list-based content ("3 Tools," "5 Mistakes") is highly effective. Focus on its clarity, perceived value, and high save/share rate.]
-    ---YOUTUBE_SCRIPT---
-    [Provide a full, engaging video script broken down into parts for each item on the list, plus a compelling intro and outro/CTA.]
-    ---CAMPAIGN_3_END---
+    ---SCRIPT_3---
+    [Write the complete third video script here. Include visual cues.]
+    ---SCRIPT_3_END---
+
+    ---INSTAGRAM_CAPTION---
+    [Write a single, beautifully formatted Instagram caption with emojis and a strong call to action here.]
+    ---INSTAGRAM_CAPTION_END---
+
+    ---HASHTAGS---
+    [Provide a single block of 15-20 strategic hashtags here.]
+    ---HASHTAGS_END---
     """
     try:
         response = model.generate_content(prompt)
