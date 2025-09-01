@@ -303,65 +303,143 @@ def generate_viral_content_endpoint():
 def download_ebook(filename):
     return send_from_directory(EBOOK_DIR, filename, as_attachment=True)
 
-def get_css_for_style(font_name, color_hex):
+# In app.py, replace the get_css_for_style function
+
+def get_css_for_style(font_name='roboto', color_hex='#FFFFFF'):
     font = FONT_STYLES.get(font_name, FONT_STYLES['roboto'])
-    text_color, heading_color, toc_link_color, toc_border_color = ('#EAEAEA', '#FFFFFF', '#90cdf4', '#4A5567') if is_color_dark(color_hex) else ('#333333', '#111111', '#2c3e50', '#CCCCCC')
+    if is_color_dark(color_hex):
+        main_text_color, heading_color, toc_link_color, toc_border_color = '#EAEAEA', '#FFFFFF', '#90cdf4', '#4A5567'
+    else:
+        main_text_color, heading_color, toc_link_color, toc_border_color = '#333333', '#111111', '#2c3e50', '#CCCCCC'
     
-    return f"""
-        <style>
-            {font['import']}
-            @page {{ size: A4; margin: 2.5cm; @bottom-center {{ content: 'Page ' counter(page); font-size: 10pt; color: #888; }} }}
-            body {{ background-color: {color_hex}; color: {text_color}; {font['body']} line-height: 1.6; font-size: 12pt; }}
-            h1, h2, h3, h4 {{ color: {heading_color}; {font['headings']}; page-break-after: avoid; }}
-            h2.module-title {{ page-break-before: always; }}
-            .title-page {{ page-break-after: always; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 20cm; }}
-            .title-page h1 {{ font-size: 42pt; }}
-            .toc-page {{ page-break-after: always; }}
-            .toc-page h2 {{ border-bottom: 2px solid {toc_border_color}; padding-bottom: 10px; }}
-            .toc-page ul {{ list-style-type: none; padding-left: 0; }}
-            .toc-module {{ font-size: 14pt; font-weight: bold; margin-bottom: 15px; }}
-            .toc-lessons {{ padding-left: 25px; margin-top: 10px; list-style-type: none; }}
-            .toc-lessons li {{ margin-bottom: 10px; font-size: 11pt; }}
-            .toc-page a {{ text-decoration: none; color: {toc_link_color}; }}
-            .lesson {{ page-break-inside: avoid; }}
-            .ai-image img {{ max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 8px; }}
-        </style>
+    base_css = f"""
+        @page {{ size: A4; margin: 2.5cm 2cm;
+            @bottom-center {{ content: 'Page ' counter(page); font-size: 10pt; color: #888; }}
+        }}
+        body {{ background-color: {color_hex}; line-height: 1.6; font-size: 11pt; color: {main_text_color}; {font['body']} }}
+        h1, h2, h3, h4 {{ page-break-after: avoid; color: {heading_color}; {font['headings']} }}
+        h2.module-title {{ page-break-before: always; }}
+        .title-page, .toc-page, .executive-summary-page {{ page-break-after: always; }}
+
+        .title-page {{ text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 20cm; }}
+        .title-page h1 {{ font-size: 42pt; margin: 0; }}
+        .title-page h3 {{ font-size: 16pt; margin-top: 1cm; font-weight: normal; }}
+        .title-page img {{ max-width: 18cm; max-height: 18cm; object-fit: contain; }}
+        
+        .toc-page h2, .executive-summary-page h2 {{ border-bottom: 2px solid {toc_border_color}; padding-bottom: 10px; }}
+        .toc-page ul {{ list-style-type: none; padding-left: 0; }}
+        .toc-module {{ font-size: 14pt; font-weight: bold; margin-bottom: 15px; }}
+        .toc-lessons {{ padding-left: 25px; margin-top: 10px; list-style-type: none; }}
+        .toc-lessons li {{ margin-bottom: 10px; font-size: 11pt; }}
+        .toc-page a {{ text-decoration: none; color: {toc_link_color}; }}
+        
+        .executive-summary-page ul {{ list-style-position: inside; }}
+
+        .lesson {{ page-break-inside: avoid; margin-top: 30px; }}
+        .lesson h4 {{
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 12pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }}
+        .lesson-content {{ margin-top: 10px; text-align: justify; }}
+        .lesson-content p {{ margin-bottom: 1em; }}
+
+        /* --- NEW STYLES FOR LISTS IN LESSONS --- */
+        .lesson-content ul, .lesson-content ol {{
+            margin-left: 20px;
+            margin-bottom: 1em;
+        }}
+        .lesson-content li {{
+            margin-bottom: 0.5em;
+        }}
+
+        .ai-image {{
+            text-align: center;
+            margin: 2em 0;
+            clear: both;
+            page-break-inside: avoid;
+            overflow: hidden;
+        }}
+        .ai-image img {{
+            max-width: 70%;
+            height: auto;
+            border-radius: 12px;
+            display: block;
+            margin: 0 auto;
+        }}
     """
+    return f"<style>{font['import']}{base_css}</style>"
 
 def build_ebook_html(title, outline, content_data, font_name, color_hex, cover_image_path):
     html_style = get_css_for_style(font_name, color_hex)
-    html_body = f'<div class="title-page"><h1>{title}</h1><h3>By StartNerve AI</h3></div>'
+
+    # --- Step 1: Combine all content into one text block for the summary ---
+    full_text_content = ""
+    for item in content_data:
+        text_only = item['content'].split('</p>')
+        text_only = "\n".join([p.replace('<p>', '') for p in text_only if '<div class="ai-image">' not in p])
+        full_text_content += f"## {item['lesson_title']}\n{text_only}\n\n"
+
+    # --- Step 2: Generate the Executive Summary ---
+    executive_summary_html = course_agent.generate_executive_summary(full_text_content)
+
+    # --- Step 3: Build the final PDF HTML ---
+
+    # Title Page
     if cover_image_path:
         html_body = f'<div class="title-page"><img src="{cover_image_path}"></div>'
+    else:
+        html_body = f'<div class="title-page"><h1>{title}</h1><h3>By StartNerve AI</h3></div>'
     
+    # Table of Contents
     html_body += '<div class="toc-page"><h2>Table of Contents</h2><ul>'
+    # ... (rest of ToC logic) ...
     for mod_idx, module in enumerate(outline['modules'], 1):
         module_title_text = f"Module {mod_idx}: {module['module_title']}"
         module_id = secure_filename(module_title_text)
         html_body += f'<li class="toc-module"><a href="#{module_id}">{module_title_text}</a>'
         html_body += '<ul class="toc-lessons">'
         for les_idx, lesson in enumerate(module['lessons'], 1):
-             lesson_title_text = f"Lesson {mod_idx}.{les_idx}: {lesson['lesson_title']}"
-             lesson_id = secure_filename(lesson_title_text)
-             html_body += f'<li><a href="#{lesson_id}">{lesson_title_text}</a></li>'
+            lesson_title_text = f"Lesson {mod_idx}.{les_idx}: {lesson['lesson_title']}"
+            lesson_id = secure_filename(lesson_title_text)
+            html_body += f'<li><a href="#{lesson_id}">{lesson_title_text}</a></li>'
         html_body += '</ul></li>'
     html_body += '</ul></div>'
+
+    # Insert the Executive Summary Page
+    html_body += f'<div class="executive-summary-page"><h2>Executive Summary</h2>{executive_summary_html}</div>'
     
+    # --- Step 4: Build the Main Content with Action Guides ---
     content_map = {item['lesson_title']: item['content'] for item in content_data}
 
     for mod_idx, module in enumerate(outline.get('modules', []), 1):
         module_title_full = f"Module {mod_idx}: {module['module_title']}"
         module_id = secure_filename(module_title_full)
         html_body += f'<h2 class="module-title" id="{module_id}">{module_title_full}</h2>'
+        
+        module_text_content = ""
         for les_idx, lesson in enumerate(module.get('lessons', []), 1):
             lesson_title_full = f"Lesson {mod_idx}.{les_idx}: {lesson['lesson_title']}"
             lesson_id = secure_filename(lesson_title_full)
             content_html = content_map.get(lesson_title_full, "<p>Error: Content not found.</p>")
+            
+            # Add the lesson to the main body
             html_body += f"<div class='lesson'><h4 id='{lesson_id}'>{lesson_title_full}</h4><div class=\"lesson-content\">{content_html}</div></div>"
+            
+            # Also gather the text for this module's action guide
+            text_only = content_html.split('</p>')
+            text_only = "\n".join([p.replace('<p>', '') for p in text_only if '<div class="ai-image">' not in p])
+            module_text_content += f"## {lesson_title_full}\n{text_only}\n\n"
+
+        # --- NEW: Generate and Insert the Action Guide for this module ---
+        action_guide_html = course_agent.generate_action_guide(module_title_full, module_text_content)
+        html_body += f'<div class="action-guide-page"><h2>Action Guide: {module["module_title"]}</h2>{action_guide_html}</div>'
 
     return f"<html><head><meta charset='UTF-8'>{html_style}</head><body>{html_body}</body></html>"
-
-
+    
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)

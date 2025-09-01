@@ -100,6 +100,8 @@ def parse_outline(text):
     return data
 
 
+# In course_agent.py, replace the generate_lesson_content function
+
 def generate_lesson_content(course_title, module_title, lesson_title, learning_objective):
     """
     Generates detailed 500-700 word lesson content for a given topic.
@@ -115,10 +117,13 @@ def generate_lesson_content(course_title, module_title, lesson_title, learning_o
     Your task is to write a substantial lesson of **500-700 words**.
     Write clear, engaging, and structured content with multiple paragraphs.
     Do NOT include the lesson title in the body of the content.
+    IMPORTANT: For any lists, you MUST use proper HTML tags (<ul> and <li> for bullet points, <ol> and <li> for numbered lists). Do not use markdown like asterisks or dashes.
     """
     try:
         response = model.generate_content(prompt)
-        return response.text
+        # Clean the response text to remove any remaining markdown for bolding
+        clean_response = response.text.replace('**', '')
+        return clean_response
     except Exception as e:
         print(f"Error during lesson content generation: {e}")
         return "Error generating content for this lesson."
@@ -157,70 +162,107 @@ def find_unique_image(title, content, used_ids):
 
 
 # In course_agent.py, replace the generate_viral_campaign function
+
 def generate_viral_campaign(topic, brand_dna):
     """
-    Generates 3 premium, distinct, 50-60 second viral video scripts.
+    Generates 3 distinct viral video scripts, one caption, and one hashtag block.
     """
     prompt = f"""
-    You are "Synapse," a world-class viral video strategist. Your job is to create emotionally engaging, 50-60 second video scripts optimized for platforms like TikTok, Reels, and YouTube Shorts. A client's brand DNA is as follows:
+    You are a world-class viral video scriptwriter. Your job is to create scripts that are emotionally engaging and optimized for short-form video platforms. A client's brand DNA is as follows:
     - Tone: {brand_dna.get('tone', 'Educational & Authoritative')}
     - Target Audience: {brand_dna.get('audience', 'General Audience')}
     - Call to Action: {brand_dna.get('cta', 'Follow for more')}
 
     The client wants three distinct viral video scripts on the topic: "{topic}".
 
-    Your task is to generate THREE complete, distinct, and premium video scripts. Each script must be detailed enough to fill 50-60 seconds and use a different proven viral framework.
+    Your task is to generate:
+    1.  Three complete, distinct, and high-quality video scripts.
+    2.  One all-purpose, engaging Instagram caption that can be used with any of the videos.
+    3.  One block of 15-20 strategic hashtags.
 
-    Structure the output EXACTLY as follows, using the specified delimiters.
+    Structure the output EXACTLY as follows, using the specified delimiters. Do NOT use markdown like **.
 
     ---SCRIPT_1---
-    **Framework:** The Contrarian Truth
-
-    **(0-5s) The Hook:**
-    [Write a strong, contrarian opening statement that challenges a common belief about the topic. Make it bold and slightly shocking.]
-
-    **(5-25s) Agitate the Problem:**
-    [Describe the pain points and frustrations the audience experiences by following the common (wrong) advice. Use relatable examples and fast-paced visual cues.]
-
-    **(25-50s) Reveal the "Real" Solution:**
-    [Introduce the new, correct way of thinking. Present your core value and evidence here. Explain why this approach is better and show the positive results.]
-
-    **(50-60s) The Call to Action:**
-    [Give a clear, strong call to action that encourages the viewer to learn more, follow, or try the solution themselves.]
+    [Write the complete first video script here. Include visual cues.]
     ---SCRIPT_1_END---
 
     ---SCRIPT_2---
-    **Framework:** The Storytelling Arc
-
-    **(0-7s) The Relatable Beginning:**
-    [Start with a personal and relatable story about a struggle related to the topic. "I used to be like you..."]
-
-    **(7-30s) The Turning Point:**
-    [Describe the moment of discovery or the "aha!" moment when you found a better way. Build suspense and keep the viewer engaged.]
-
-    **(30-55s) The Transformation & Value:**
-    [Show the positive outcome of the new approach. Explain the key lesson learned and give the audience the actionable advice they can use.]
-
-    **(55-60s) The Call to Action:**
-    [End with a call to action that ties back to the story.]
+    [Write the complete second video script here. Include visual cues.]
     ---SCRIPT_2_END---
 
     ---SCRIPT_3---
-    **Framework:** The Value-Packed List (Expanded)
-
-    **(0-5s) The Hook:**
-    [State the number and type of value being offered (e.g., "3 secrets," "5 myths"). Make it sound exclusive and valuable.]
-
-    **(5-55s) The Detailed Breakdown:**
-    [Dedicate about 15-20 seconds to each point on the list. For each point, provide a clear explanation, a practical example, and a strong visual cue.]
-
-    **(55-60s) The Summary & Call to Action:**
-    [Quickly summarize the key takeaways and give a strong call to action.]
+    [Write the complete third video script here. Include visual cues.]
     ---SCRIPT_3_END---
+
+    ---INSTAGRAM_CAPTION---
+    [Write a single, beautifully formatted Instagram caption with emojis and a strong call to action here.]
+    ---INSTAGRAM_CAPTION_END---
+
+    ---HASHTAGS---
+    [Provide a single block of 15-20 strategic hashtags here.]
+    ---HASHTAGS_END---
     """
     try:
         response = model.generate_content(prompt)
-        return response.text
+        # Clean the response text to remove any asterisks for bolding
+        clean_response = response.text.replace('**', '')
+        return clean_response
     except Exception as e:
         print(f"Error during viral campaign generation: {e}")
         return None
+        
+def generate_executive_summary(full_text_content):
+    """
+    Takes the entire text of an ebook and generates a one-page executive summary.
+    """
+    prompt = f"""
+    You are a professional editor and analyst. Your task is to read the following comprehensive text from a generated ebook and distill it into a powerful, one-page executive summary.
+
+    The summary must be concise, professional, and easy to read. It should include:
+    1.  A brief, engaging introduction that states the overall purpose of the ebook.
+    2.  A section of "Key Takeaways" presented as a bulleted list, highlighting the most important actionable advice from the text.
+    3.  A concluding paragraph that reinforces the value of the information and encourages the reader to dive into the main content.
+
+    The entire summary should be formatted in clean HTML (using <p> and <ul>/<li> tags) and should not exceed 400 words.
+
+    Here is the full text of the ebook:
+    ---
+    {full_text_content}
+    ---
+    """
+    try:
+        response = model.generate_content(prompt)
+        # We need to clean up the response to ensure it's valid HTML
+        clean_html = response.text.replace('```html', '').replace('```', '').strip()
+        return clean_html
+    except Exception as e:
+        print(f"Error during executive summary generation: {e}")
+        return "<p>Error: Could not generate the executive summary for this ebook.</p>"
+
+def generate_action_guide(module_title, module_text_content):
+    """
+    Takes the text of a single module and generates a one-page action guide.
+    """
+    prompt = f"""
+    You are an expert instructional designer. Your task is to read the following text from a single module of an ebook and create a practical, one-page "Action Guide" or "Worksheet" for the reader.
+
+    The Action Guide must be interactive and engaging. It should include:
+    1.  A brief introduction that summarizes the module's key goal.
+    2.  A section with 3-5 specific, actionable "Checklist Items" or "Action Steps" that the reader can take to apply what they've learned.
+    3.  A section with 2-3 "Reflection Questions" that encourage the reader to think more deeply about the module's topic.
+
+    The entire guide should be formatted in clean HTML (using <p>, <ul>, <li>, and <strong> tags) and should be concise enough to fit on a single page.
+
+    Here is the text for the module titled "{module_title}":
+    ---
+    {module_text_content}
+    ---
+    """
+    try:
+        response = model.generate_content(prompt)
+        # Clean up the response to ensure it's valid HTML
+        clean_html = response.text.replace('```html', '').replace('```', '').strip()
+        return clean_html
+    except Exception as e:
+        print(f"Error during action guide generation: {e}")
+        return "<p>Error: Could not generate the action guide for this module.</p>"
